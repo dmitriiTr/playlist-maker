@@ -3,12 +3,8 @@
 import { existsSync, readdirSync, writeFileSync } from 'node:fs';
 
 import { create } from 'xmlbuilder2';
+import minimist from 'minimist';
 import { partition } from './utils.js';
-
-const rootFolder = process.argv[2];
-const audioTrack = process.argv[3] ?? 0;
-const subsFlag = process.argv[4] === "true";
-const recFlag = process.argv[5] === "true";
 
 /**
  * @param {string} pathToVideos - path to folder with videos
@@ -22,7 +18,7 @@ function getVideosNames(pathToVideos) {
     else {
       const all = readdirSync(pathToVideos, { withFileTypes: true });
       const [dirs, files] = partition(all, n => n.isDirectory())
-      if (recFlag && dirs.length !== 0) {
+      if (args.r && dirs.length !== 0) {
         // recursively creating playlists for subfolders
         dirs.forEach(dir => createPlaylistFiles(`${dir.path}\\${dir.name}`))
       }
@@ -55,9 +51,9 @@ function createPlaylistXML(fileNames) {
       .ele('duration').txt("0").up()
       .ele('extension', { "application": "http://www.videolan.org/vlc/playlist/0" })
       .ele("vlc:id").txt(i.toString()).up()
-      .ele("vlc:option").txt(`audio-track=${audioTrack}`).up()
+      .ele("vlc:option").txt(`audio-track=${args.audioTrack}`).up()
       // Setting sub track to fake number to turn off subtitles by default
-      .ele("vlc:option").txt(`sub-track=${subsFlag ? 0 : fakeSubTrack}`).up()
+      .ele("vlc:option").txt(`sub-track=${args.subs ? 0 : fakeSubTrack}`).up()
       .up()
       .up();
   })
@@ -89,5 +85,11 @@ function createPlaylistFiles(path) {
   }
 }
 
-createPlaylistFiles(rootFolder);
+const args = minimist(process.argv.slice(2))
+const rootFolder = args._[0];
 
+if (rootFolder) {
+  createPlaylistFiles(rootFolder);
+} else {
+  console.log("must specify directory");
+}
