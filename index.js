@@ -1,6 +1,9 @@
+// @ts-check
+
 import { existsSync, readdirSync, writeFileSync } from 'node:fs';
 
 import { create } from 'xmlbuilder2';
+import { partition } from './utils.js';
 
 const rootFolder = process.argv[2];
 const audioTrack = process.argv[3] ?? 0;
@@ -18,13 +21,12 @@ function getVideosNames(pathToVideos) {
     }
     else {
       const all = readdirSync(pathToVideos, { withFileTypes: true });
-      const dirs = all.filter(n => n.isDirectory());
+      const [dirs, files] = partition(all, n => n.isDirectory())
       if (recFlag && dirs.length !== 0) {
         // recursively creating playlists for subfolders
         dirs.forEach(dir => createPlaylistFiles(`${dir.path}\\${dir.name}`))
       }
 
-      const files = all.filter(n => !n.isDirectory());
       return files
         .filter(file => file.name.indexOf('.mp4') !== -1 || file.name.indexOf('.mkv') !== -1)
         // Without addning global path subs do not work for some reason
@@ -46,13 +48,13 @@ function createPlaylistXML(fileNames) {
     .ele('playlist', { xmlns: 'http://xspf.org/ns/0/', "xmlns:vlc": "http://www.videolan.org/vlc/playlist/ns/0/" })
     .ele('title').txt("Title").up().ele('trackList');
 
-  fileNames.forEach((file, i) => {
+  fileNames.forEach((fileName, i) => {
     root.ele('track')
       // has to be regular slashes "/" not "\"
-      .ele('location').txt(`file:///${file}`).up()
+      .ele('location').txt(`file:///${fileName}`).up()
       .ele('duration').txt("0").up()
       .ele('extension', { "application": "http://www.videolan.org/vlc/playlist/0" })
-      .ele("vlc:id").txt(i).up()
+      .ele("vlc:id").txt(i.toString()).up()
       .ele("vlc:option").txt(`audio-track=${audioTrack}`).up()
       // Setting sub track to fake number to turn off subtitles by default
       .ele("vlc:option").txt(`sub-track=${subsFlag ? 0 : fakeSubTrack}`).up()
