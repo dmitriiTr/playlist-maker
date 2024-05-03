@@ -40,24 +40,40 @@ function getVideosNames(pathToVideos) {
  */
 function createPlaylistXML(fileNames) {
   const fakeSubTrack = 99;
+  const { subTrack, noSub, subFile, audioTrack } = args
+  const subValue = subTrack
+    ? subTrack
+    // Setting sub track to fake number to turn off subtitles
+    : noSub ? fakeSubTrack : 0;
+
+  /**
+  * @param {number} i - index of file
+  * @return {string} attribute value 
+  */
+  const subFileForVideo = i => subFile.replace("$", (i + 1).toLocaleString('en-US', { minimumIntegerDigits: 2 }));
+
   const root = create({ version: '1.0', encoding: "UTF-8" })
     .ele('playlist', { xmlns: 'http://xspf.org/ns/0/', "xmlns:vlc": "http://www.videolan.org/vlc/playlist/ns/0/" })
     .ele('title').txt("Title").up().ele('trackList');
 
   fileNames.forEach((fileName, i) => {
-    root.ele('track')
+    const track = root.ele('track')
       // has to be regular slashes "/" not "\"
       .ele('location').txt(`file:///${fileName}`).up()
       .ele('duration').txt("0").up()
       .ele('extension', { "application": "http://www.videolan.org/vlc/playlist/0" })
       .ele("vlc:id").txt(i.toString()).up()
-      .ele("vlc:option").txt(`audio-track=${args.audioTrack}`).up()
-      // Setting sub track to fake number to turn off subtitles by default
-      .ele("vlc:option").txt(`sub-track=${args.subs ? 0 : fakeSubTrack}`).up()
-      .up()
+      .ele("vlc:option").txt(`audio-track=${audioTrack}`).up()
+
+    // Either add new sub file or selecting from existing
+    if (subFile) {
+      track.ele("vlc:option").txt(`sub-file=${subFileForVideo(i)}`).up();
+    } else {
+      track.ele("vlc:option").txt(`sub-track=${subValue}`).up()
+    }
+    root.up()
       .up();
   })
-
   root.up()
     .up();
 
