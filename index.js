@@ -24,7 +24,8 @@ function getVideosNames(pathToVideos) {
       }
 
       return files
-        .filter(file => file.name.indexOf('.mp4') !== -1 || file.name.indexOf('.mkv') !== -1)
+        .filter(file => file.name.indexOf('.mp4') !== -1 || file.name.indexOf('.mkv') !== -1 ||
+          file.name.indexOf('.avi') !== 1)
         // Without addning global path subs do not work for some reason
         .map(file => `${file.path}/${file.name}`);
     }
@@ -81,10 +82,7 @@ function createPlaylistXML(fileNames) {
   return root.end({ prettyPrint: true });
 }
 
-/**
- * @param {string} path - path to folder with videos
- * @return {void}
- */
+/** @param {string} path - path to folder with videos */
 function createPlaylistFiles(path) {
   const names = getVideosNames(path);
   if (names.length !== 0) {

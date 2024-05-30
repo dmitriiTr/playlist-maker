@@ -1,0 +1,17 @@
+{
+    "compilerOptions": {
+      "lib": [
+        "esnext",
+      ],
+      "noImplicitAny": true,
+      "strict": true,
+      "noUnusedLocals": true,
+      "noUnusedParameters": true,
+      "noFallthroughCasesInSwitch": true
+    },
+    "exclude": [
+      "node_modules",
+      "**/node_modules/*",
+      "./*ts"
+    ]
+  }
