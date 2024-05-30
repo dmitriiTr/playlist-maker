@@ -13,14 +13,14 @@ import { partition } from './utils.js';
 function getVideosNames(pathToVideos) {
   try {
     if (!existsSync(pathToVideos)) {
-      console.log('not found');
+      console.error("not found");
     }
     else {
       const all = readdirSync(pathToVideos, { withFileTypes: true });
-      const [dirs, files] = partition(all, n => n.isDirectory())
+      const [dirs, files] = partition(all, n => n.isDirectory());
       if (args.r && dirs.length !== 0) {
         // recursively creating playlists for subfolders
-        dirs.forEach(dir => createPlaylistFiles(`${dir.path}\\${dir.name}`))
+        dirs.forEach(dir => createPlaylistFiles(`${dir.path}\\${dir.name}`));
       }
 
       return files
@@ -37,11 +37,11 @@ function getVideosNames(pathToVideos) {
 
 /**
  * @param {string[]} fileNames - list of videofiles
- * @return {string} playlist in xml format 
+ * @return {string} playlist in xml format
  */
 function createPlaylistXML(fileNames) {
   const fakeSubTrack = 99;
-  const { subTrack, noSub, subFile, audioTrack } = args
+  const { subTrack, noSub, subFile, audioTrack } = args;
   const subValue = subTrack
     ? subTrack
     // Setting sub track to fake number to turn off subtitles
@@ -49,7 +49,7 @@ function createPlaylistXML(fileNames) {
 
   /**
   * @param {number} i - index of file
-  * @return {string} attribute value 
+  * @return {string} attribute value
   */
   const subFileForVideo = i => subFile.replace("$", (i + 1).toLocaleString('en-US', { minimumIntegerDigits: 2 }));
 
@@ -64,17 +64,17 @@ function createPlaylistXML(fileNames) {
       .ele('duration').txt("0").up()
       .ele('extension', { "application": "http://www.videolan.org/vlc/playlist/0" })
       .ele("vlc:id").txt(i.toString()).up()
-      .ele("vlc:option").txt(`audio-track=${audioTrack}`).up()
+      .ele("vlc:option").txt(`audio-track=${audioTrack}`).up();
 
     // Either add new sub file or selecting from existing
     if (subFile) {
       track.ele("vlc:option").txt(`sub-file=${subFileForVideo(i)}`).up();
     } else {
-      track.ele("vlc:option").txt(`sub-track=${subValue}`).up()
+      track.ele("vlc:option").txt(`sub-track=${subValue}`).up();
     }
     root.up()
       .up();
-  })
+  });
   root.up()
     .up();
 
@@ -92,18 +92,18 @@ function createPlaylistFiles(path) {
       const fileName = path.split("\\").pop();
       const filePath = `${path}\\${fileName}.xspf`;
       writeFileSync(filePath, xmlString);
-      console.log(`File "${filePath}" is created`);
+      console.info(`File "${filePath}" is created`);
     } catch (err) {
       console.error(err);
     }
   }
 }
 
-const args = minimist(process.argv.slice(2))
+const args = minimist(process.argv.slice(2));
 const rootFolder = args._[0];
 
 if (rootFolder) {
   createPlaylistFiles(rootFolder);
 } else {
-  console.log("must specify directory");
+  console.info("must specify directory");
 }

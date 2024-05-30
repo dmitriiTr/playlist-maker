@@ -3,3 +3,4 @@ videos/
 dist/
 
 .vscode/
+yarn-error.log
