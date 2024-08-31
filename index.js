@@ -24,8 +24,8 @@ function getVideosNames(pathToVideos) {
       }
 
       return files
-        .filter(file => file.name.indexOf('.mp4') !== -1 || file.name.indexOf('.mkv') !== -1 ||
-          file.name.indexOf('.avi') !== 1)
+        .filter(file => file.name.includes('.mp4') || file.name.includes('.mkv') ||
+          file.name.includes('.avi'))
         // Without addning global path subs do not work for some reason
         .map(file => `${file.path}/${file.name}`);
     }
