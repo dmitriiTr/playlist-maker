@@ -20,3 +20,17 @@ export function partition(arr, fn) {
   });
   return [trueArr, falseArr];
 }
+
+/**
+ * @param {string} filename
+ * @return {string} extension
+ */
+export function getFileExtension(filename) {
+  const substrings = filename.split(".");
+
+  if (substrings.length < 2) {
+    return "";
+  }
+
+  return substrings.at(-1) ?? "";
+}

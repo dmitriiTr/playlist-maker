@@ -1,10 +1,11 @@
 // @ts-check
 
 import { existsSync, readdirSync, writeFileSync } from 'node:fs';
+import { getFileExtension, partition } from './utils.js';
 
+import { VIDEO_FILES_EXTENSIONS } from './constants.js';
 import { create } from 'xmlbuilder2';
 import minimist from 'minimist';
-import { partition } from './utils.js';
 
 /**
  * @param {string} pathToVideos - path to folder with videos
@@ -24,8 +25,7 @@ function getVideosNames(pathToVideos) {
       }
 
       return files
-        .filter(file => file.name.includes('.mp4') || file.name.includes('.mkv') ||
-          file.name.includes('.avi'))
+        .filter(file => VIDEO_FILES_EXTENSIONS.has(getFileExtension(file.name)))
         // Without addning global path subs do not work for some reason
         .map(file => `${file.path}/${file.name}`);
     }
