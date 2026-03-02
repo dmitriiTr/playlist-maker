@@ -6,6 +6,7 @@ import { getFileExtension, partition } from './utils.js';
 import { VIDEO_FILES_EXTENSIONS } from './constants.js';
 import { create } from 'xmlbuilder2';
 import minimist from 'minimist';
+import pathModule from "path";
 
 /**
  * @param {string} pathToVideos - path to folder with videos
@@ -17,17 +18,17 @@ function getVideosNames(pathToVideos) {
       console.error("not found");
     }
     else {
-      const all = readdirSync(pathToVideos, { withFileTypes: true });
-      const [dirs, files] = partition(all, n => n.isDirectory());
-      if (args.r && dirs.length !== 0) {
+      const allElements = readdirSync(pathToVideos, { withFileTypes: true });
+      const [dirs, files] = partition(allElements, n => n.isDirectory());
+      if (args.r) {
         // recursively creating playlists for subfolders
-        dirs.forEach(dir => createPlaylistFiles(`${dir.path}\\${dir.name}`));
+        dirs.forEach(dir => createPlaylistFiles(`${dir.parentPath}\\${dir.name}`));
       }
 
       return files
         .filter(file => VIDEO_FILES_EXTENSIONS.has(getFileExtension(file.name)))
-        // Without addning global path subs do not work for some reason
-        .map(file => `${file.path}/${file.name}`);
+        // Without adding global path subs do not work for some reason
+        .map(file => `${file.parentPath}/${file.name}`);
     }
   } catch (err) {
     console.error(err);
@@ -60,7 +61,7 @@ function createPlaylistXML(fileNames) {
   fileNames.forEach((fileName, i) => {
     const track = root.ele('track')
       // has to be regular slashes "/" not "\"
-      .ele('location').txt(`file:///${fileName}`).up()
+      .ele('location').txt(`file:///${encodeURIComponent(fileName)}`).up()
       .ele('duration').txt("0").up()
       .ele('extension', { "application": "http://www.videolan.org/vlc/playlist/0" })
       .ele("vlc:id").txt(i.toString()).up()
@@ -82,16 +83,18 @@ function createPlaylistXML(fileNames) {
   return root.end({ prettyPrint: true });
 }
 
-/** @param {string} path - path to folder with videos */
-function createPlaylistFiles(path) {
-  const names = getVideosNames(path);
+/** @param {string} dirPath - path to folder with videos */
+function createPlaylistFiles(dirPath) {
+  const names = getVideosNames(dirPath);
+
   if (names.length !== 0) {
 
     const xmlString = createPlaylistXML(names);
     try {
-      const fileName = path.split("\\").pop();
-      const filePath = `${path}\\${fileName}.xspf`;
-      writeFileSync(filePath, xmlString);
+      const folderName = pathModule.basename(pathModule.resolve(dirPath));
+      const playlistName = args.nameAsFolder ? folderName : "playlist";
+      const filePath = pathModule.join(dirPath, `${playlistName}.xspf`);
+      writeFileSync(filePath, xmlString, { encoding: "utf8" });
       console.info(`File "${filePath}" is created`);
     } catch (err) {
       console.error(err);
