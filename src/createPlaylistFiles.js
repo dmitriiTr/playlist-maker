@@ -4,8 +4,8 @@ import { existsSync, readdirSync, writeFileSync } from "node:fs";
 import { getFileExtension, partition } from "./utils.js";
 
 import { VIDEO_FILES_EXTENSIONS } from "./constants.js";
+import args from "./cli.js";
 import { create } from "xmlbuilder2";
-import minimist from "minimist";
 import pathModule from "path";
 
 /**
@@ -47,6 +47,7 @@ function getVideosNames(pathToVideos) {
  */
 function createPlaylistXML(fileNames) {
   const fakeSubTrack = 99;
+
   const { subTrack, noSub, subFile, audioTrack = 0 } = args;
   const subValue = subTrack
     ? subTrack
@@ -114,7 +115,7 @@ function createPlaylistXML(fileNames) {
 }
 
 /** @param {string} dirPath - path to folder with videos */
-function createPlaylistFiles(dirPath) {
+export function createPlaylistFiles(dirPath) {
   const names = getVideosNames(dirPath);
 
   if (names.length !== 0) {
@@ -129,13 +130,4 @@ function createPlaylistFiles(dirPath) {
       console.error(err);
     }
   }
-}
-
-const args = minimist(process.argv.slice(2));
-const rootFolder = args._[0];
-
-if (rootFolder) {
-  createPlaylistFiles(rootFolder);
-} else {
-  console.info("must specify directory");
 }
