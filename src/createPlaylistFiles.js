@@ -18,7 +18,16 @@ function getVideosNames(pathToVideos) {
       console.error("not found");
     } else {
       const allElements = readdirSync(pathToVideos, { withFileTypes: true });
-      const [dirs, files] = partition(allElements, (n) => n.isDirectory());
+      const allElementsSorted = allElements.sort((a, b) =>
+        a.name.localeCompare(b.name, undefined, {
+          numeric: true,
+          sensitivity: "base",
+        }),
+      );
+      const [dirs, files] = partition(allElementsSorted, (n) =>
+        n.isDirectory(),
+      );
+
       if (args.r) {
         // recursively creating playlists for subfolders
         dirs.forEach((dir) =>
@@ -31,7 +40,7 @@ function getVideosNames(pathToVideos) {
           .filter((file) =>
             VIDEO_FILES_EXTENSIONS.has(getFileExtension(file.name)),
           )
-          // Without adding global path subs do not work for some reason
+          // Subs do not work without using full path
           .map((file) => `${file.parentPath}/${file.name}`)
       );
     }
@@ -76,7 +85,7 @@ function createPlaylistXML(fileNames) {
 
   fileNames.forEach((fileName, i) => {
     const track = trackList.ele("track");
-    // has to be regular slashes "/" not "\"
+
     track
       .ele("location")
       .txt(`file:///${encodeURIComponent(fileName)}`)
